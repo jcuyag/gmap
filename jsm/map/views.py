@@ -5,10 +5,25 @@ from django.http import JsonResponse, HttpResponse
 
 
 def index(request):
-    return render(request, 'index.html')
+    
+    if request.method == 'POST':
+        # print(dir(request.POST))
+        for i in request.POST.items():
+            print(i)
+        
+            CONTEXT = {
+                'searched': request.POST.get('search_name'),
+                'map_id':1
+            }
+    elif request.method == 'GET':
+        CONTEXT = {
+            'searched': request.POST.get('search_name')
+        }
+    return render(request, 'index.html', context=CONTEXT)
 
 
-def store_data(request):
+def store_data(request, _id):
+    print(_id)
     _data = json.load(open('map/static/stores.json'))
 
     return JsonResponse(_data)

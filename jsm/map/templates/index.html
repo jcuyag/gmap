@@ -14,12 +14,11 @@
     </style>
 </head>
 <body>
-    <h1>HELLO WORLD</h1>
-
     <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
         <div class="collapse navbar-collapse" id="navbarsExampleDefault">
-          <form class="form-inline my-2 my-lg-0">
-            <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search">
+          <form class="form-inline my-2 my-lg-0" action="/map/index" method="POST">
+            {% csrf_token %}
+            <input name="search_name" class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search" value="{{ searched }}">
             <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
           </form>
         </div>
@@ -28,6 +27,58 @@
 
     {% load static %}
     <script src="{% static "app.js" %}"></script>
+    <script>
+      function initMap() {
+
+        // Create the map.
+        const map = new google.maps.Map(document.getElementsByClassName('map')[0], {
+          zoom: 7,
+          center: {lat: 52.632469, lng: -1.689423},
+          styles: mapStyle
+        });
+      
+        // Load the stores GeoJSON onto the map.
+        map.data.loadGeoJson('data/{{ map_id }}');
+      
+        // Define the custom marker icons, using the store's "category".
+        map.data.setStyle(feature => {
+          return {
+            icon: {
+              url: `img/icon_${feature.getProperty('category')}`,
+              scaledSize: new google.maps.Size(64, 64)
+            }
+          };
+        });
+      
+        const apiKey = 'AIzaSyAoyLhM9Zwac22E80p9cFL8BDNMGituNTg';
+        const infoWindow = new google.maps.InfoWindow();
+        infoWindow.setOptions({pixelOffset: new google.maps.Size(0, -30)});
+      
+        // Show the information for a store when its marker is clicked.
+        map.data.addListener('click', event => {
+          let category = event.feature.getProperty('category');
+          let name = event.feature.getProperty('name');
+          let description = event.feature.getProperty('description');
+          let hours = event.feature.getProperty('hours');
+          let phone = event.feature.getProperty('phone');
+          let position = event.feature.getGeometry().get();
+          let content = `
+            <img style="float:left; width:200px; margin-top:30px" src="img/logo_${category}">
+            <div style="margin-left:220px; margin-bottom:20px;">
+              <h2>${name}</h2><p>${description}</p>
+              <p><b>Open:</b> ${hours}<br/><b>Phone:</b> ${phone}</p>
+              <p><img src="https://maps.googleapis.com/maps/api/streetview?size=350x120&location=${position.lat()},${position.lng()}&key=${apiKey}"></p>
+            </div>
+          `;
+          infoWindow.setContent(content);
+          infoWindow.setPosition(position);
+          infoWindow.setOptions({pixelOffset: new google.maps.Size(0, -30)});
+          infoWindow.open(map);
+        });
+      
+      }
+
+    </script>
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js" integrity="sha384-cs/chFZiN24E4KMATLdqdvsezGxaGsi4hLGOzlXwp5UZB1LY//20VyM2taTB4QvJ" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js" integrity="sha384-uefMccjFJAIv6A+rW+L4AHf99KvxDjWSu1z9VI8SKNVmz4sk7buKt/6v9KI65qnm" crossorigin="anonymous"></script>
